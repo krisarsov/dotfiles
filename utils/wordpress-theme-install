@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Load ArgsParse library
+. ~/.bash/argsparse/argsparse.sh
+
+# Allow empty command line
+argsparse_allow_no_argument yes
+
+# Define verbose
+argsparse_use_option verbose "Show verbose output." short:v default:0
+
+# Parse options
+argsparse_parse_options "$@"
+
+_debug() {
+	[[ ${program_options['verbose']} == 1 ]] && echo $1
+}
+
+# Used to prefix all functions in the theme
+THEME_NAMESPACE=${program_params[0]}
+# The destination of the theme
+DESTINATION=${program_params[1]}
+
+if [[ -z ${THEME_NAMESPACE} ]]; then
+	echo 'Missing theme namespace'
+	exit 1
+fi
+
+if [[ -z ${DESTINATION} ]]; then
+	echo 'Missing theme destination'
+	exit 2
+fi
+
+OUTPUT="${THEME_NAME}.tar.gz"
+
+git snap ${OUTPUT} && (
+	_debug 'Export archive succesfully created'
+
+	[[ ! -d ${DESTINATION} ]] && (
+		_debug "Creating destination dir '${DESTINATION}'"
+		mkdir -p ${DESTINATION}
+	)
+
+ 	_debug "Extracting archive into '${DESTINATION}'"
+	tar -C ${DESTINATION} -xf ${OUTPUT} && (
+		_debug "Replacing \"Theme_Name\" with \"${THEME_NAMESPACE}\""
+		find ${DESTINATION} -type f -exec sed -i "s/Theme_Name/${THEME_NAMESPACE}/g" {} + && (
+			_debug "Cleaning up..."
+			rm ${OUTPUT}
+		)
+	) || (
+	 	_debug 'Cannot create export'
+	)
+)
