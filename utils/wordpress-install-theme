@@ -1,0 +1,53 @@
+#!/bin/bash
+
+_help() {
+    echo 'usage: wp-theme-install [-q]'
+    exit 1
+}
+
+_debug() {
+	if [[ ${QUIET} == false ]]; then
+		echo $1
+	fi
+}
+
+
+QUIET=false
+
+while [[ -n ${1} ]]; do
+    case ${1} in
+        -q)
+            QUIET=true
+            ;;
+        --*)
+            _help
+            ;;
+    esac
+
+    shift
+done
+
+THEME_NAME=ellesse_desktop
+FORMAT=tar.gz
+DESTINATION=~/
+OUTPUT="${THEME_NAME}.${FORMAT}"
+
+git snap ${OUTPUT} && (
+	_debug 'Export archive succesfully created'
+
+	[[ ! -d ${DESTINATION} ]] && (
+		_debug "Creating destination dir '${DESTINATION}'..."
+		mkdir -p ${DESTINATION}
+	)
+
+ 	_debug "Extracting archive into '${DESTINATION}'..."
+	tar -C ${DESTINATION} -xf ${OUTPUT} && (
+		_debug "Replacing \"Theme_Name\" with \"${THEME_NAME}\"..."
+		find ${DESTINATION} -type f -exec sed -i "s/Theme_Name/${THEME_NAME}/g" {} + && (
+			_debug "Cleanup..."
+			rm ${OUTPUT}
+		)
+	) || (
+	 	_debug 'Cannot create export'
+	)
+)
