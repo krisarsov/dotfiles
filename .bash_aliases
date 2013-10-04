@@ -1,0 +1,5 @@
+alias rm="rm -i"
+alias open="xdg-open"
+alias cl="clear"
+alias cll="clear; ll"
+alias clip="xclip -sel clip"
